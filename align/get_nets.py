@@ -58,7 +58,7 @@ class PNet(nn.Module):
         x = self.features(x)
         a = self.conv4_1(x)
         b = self.conv4_2(x)
-        a = F.softmax(a)
+        a = F.softmax(a, dim=1)
         return b, a
 
 
@@ -92,7 +92,7 @@ class RNet(nn.Module):
         x = self.features(x)
         a = self.conv5_1(x)
         b = self.conv5_2(x)
-        a = F.softmax(a)
+        a = F.softmax(a, dim=1)
         return b, a
 
 
@@ -141,5 +141,10 @@ class ONet(nn.Module):
         a = self.conv6_1(x)
         b = self.conv6_2(x)
         c = self.conv6_3(x)
-        a = F.softmax(a)
+        a = F.softmax(a, dim=1)
         return c, b, a
+
+
+PNET = PNet().to("cuda:0").eval()
+RNET = RNet().to("cuda:0").eval()
+ONET = ONet().to("cuda:0").eval()
