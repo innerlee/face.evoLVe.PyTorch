@@ -5,8 +5,8 @@ from evolveface import detect_faces, show_results
 from evolveface import get_reference_facial_points, warp_and_crop_face
 
 parser = argparse.ArgumentParser(description='find face')
-parser.add_argument("input", help="input image", type=str)
-parser.add_argument("-o", "--out", help="output image file", default='face.jpg')
+parser.add_argument("-i", "--input", help="input image", type=str, default='play/1.jpg')
+parser.add_argument("-o", "--out", help="output image file", default='x.jpg')
 parser.add_argument("--crop_size", help="specify size of aligned faces", default=112, type=int)
 args = parser.parse_args()
 crop_size = args.crop_size

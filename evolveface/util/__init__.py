@@ -1,0 +1,1 @@
+from .extract_feature import extract_feature_IR50A
