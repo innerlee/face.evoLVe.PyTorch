@@ -13,7 +13,6 @@ import bcolz
 import io
 import os
 
-
 # Support: ['get_time', 'l2_norm', 'make_weights_for_balanced_classes', 'get_val_pair', 'get_val_data', 'separate_irse_bn_paras', 'separate_resnet_bn_paras', 'warm_up_lr', 'schedule_lr', 'de_preprocess', 'hflip_batch', 'gen_plot', 'perform_val', 'buffer_val', 'AverageMeter', 'accuracy', 'save_checkpoint']
 
 
@@ -21,7 +20,7 @@ def get_time():
     return (str(datetime.now())[:-10]).replace(' ', '-').replace(':', '-')
 
 
-def l2_norm(input, axis = 1):
+def l2_norm(input, axis=1):
     norm = torch.norm(input, 2, axis, True)
     output = torch.div(input, norm)
 
@@ -53,7 +52,7 @@ def make_weights_for_balanced_classes(images, nclasses):
 
 
 def get_val_pair(path, name):
-    carray = bcolz.carray(rootdir = os.path.join(path, name), mode = 'r')
+    carray = bcolz.carray(rootdir=os.path.join(path, name), mode='r')
     issame = np.load('{}/{}_list.npy'.format(path, name))
 
     return carray, issame
@@ -97,10 +96,10 @@ def separate_resnet_bn_paras(modules):
     for pname, p in modules.named_parameters():
         if pname.find('bn') >= 0:
             paras_only_bn.append(p)
-            
+
     paras_only_bn_id = list(map(id, paras_only_bn))
     paras_wo_bn = list(filter(lambda p: id(p) not in paras_only_bn_id, all_parameters))
-    
+
     return paras_only_bn, paras_wo_bn
 
 
@@ -124,12 +123,11 @@ def de_preprocess(tensor):
 
 
 hflip = transforms.Compose([
-            de_preprocess,
-            transforms.ToPILImage(),
-            transforms.functional.hflip,
-            transforms.ToTensor(),
-            transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
-        ])
+    de_preprocess,
+    transforms.ToPILImage(), transforms.functional.hflip,
+    transforms.ToTensor(),
+    transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
+])
 
 
 def hflip_batch(imgs_tensor):
@@ -143,25 +141,25 @@ def hflip_batch(imgs_tensor):
 def gen_plot(fpr, tpr):
     """Create a pyplot plot and save to buffer."""
     plt.figure()
-    plt.xlabel("FPR", fontsize = 14)
-    plt.ylabel("TPR", fontsize = 14)
-    plt.title("ROC Curve", fontsize = 14)
-    plot = plt.plot(fpr, tpr, linewidth = 2)
+    plt.xlabel("FPR", fontsize=14)
+    plt.ylabel("TPR", fontsize=14)
+    plt.title("ROC Curve", fontsize=14)
+    plot = plt.plot(fpr, tpr, linewidth=2)
     buf = io.BytesIO()
-    plt.savefig(buf, format = 'jpeg')
+    plt.savefig(buf, format='jpeg')
     buf.seek(0)
     plt.close()
 
     return buf
 
 
-def perform_val(multi_gpu, device, embedding_size, batch_size, backbone, carray, issame, nrof_folds = 10, tta = True):
+def perform_val(multi_gpu, device, embedding_size, batch_size, backbone, carray, issame, nrof_folds=10, tta=True):
     if multi_gpu:
-        backbone = backbone.module # unpackage model from DataParallel
+        backbone = backbone.module  # unpackage model from DataParallel
         backbone = backbone.to(device)
     else:
         backbone = backbone.to(device)
-    backbone.eval() # switch to evaluation mode
+    backbone.eval()  # switch to evaluation mode
 
     idx = 0
     embeddings = np.zeros([len(carray), embedding_size])
@@ -204,25 +202,25 @@ class AverageMeter(object):
         self.reset()
 
     def reset(self):
-        self.val   = 0
-        self.avg   = 0
-        self.sum   = 0
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
         self.count = 0
 
-    def update(self, val, n = 1):
-        self.val   = val
-        self.sum   += val * n
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
         self.count += n
-        self.avg   = self.sum / self.count
+        self.avg = self.sum / self.count
 
 
-def accuracy(output, target, topk=(1,)):
+def accuracy(output, target, topk=(1, )):
     """Computes the precision@k for the specified values of k"""
     maxk = max(topk)
     batch_size = target.size(0)
 
     _, pred = output.topk(maxk, 1, True, True)
-    pred    = pred.t()
+    pred = pred.t()
     correct = pred.eq(target.view(1, -1).expand_as(pred))
 
     res = []

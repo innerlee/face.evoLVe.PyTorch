@@ -6,7 +6,6 @@ import torch.nn.functional as F
 from torch.nn import Parameter
 import math
 
-
 # Support: ['Softmax', 'ArcFace', 'CosFace', 'SphereFace', 'Am_softmax']
 
 
@@ -56,7 +55,7 @@ class ArcFace(nn.Module):
             m: margin
             cos(theta+m)
         """
-    def __init__(self, in_features, out_features, s = 64.0, m = 0.50, easy_margin = False): # s = 30.0
+    def __init__(self, in_features, out_features, s=64.0, m=0.50, easy_margin=False):  # s = 30.0
         super(ArcFace, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
@@ -82,10 +81,11 @@ class ArcFace(nn.Module):
             phi = torch.where(cosine > self.th, phi, cosine - self.mm)
         # --------------------------- convert label to one-hot ---------------------------
         # one_hot = torch.zeros(cosine.size(), requires_grad=True, device='cuda')
-        one_hot = torch.zeros(cosine.size(), device = 'cuda')
+        one_hot = torch.zeros(cosine.size(), device='cuda')
         one_hot.scatter_(1, label.view(-1, 1).long(), 1)
         # -------------torch.where(out_i = {x_i if condition_i else y_i) -------------
-        output = (one_hot * phi) + ((1.0 - one_hot) * cosine)  # you can use torch.where if your torch.__version__ is 0.4
+        output = (one_hot * phi) + (
+            (1.0 - one_hot) * cosine)  # you can use torch.where if your torch.__version__ is 0.4
         output *= self.s
 
         return output
@@ -100,7 +100,7 @@ class CosFace(nn.Module):
         m: margin
         cos(theta)-m
     """
-    def __init__(self, in_features, out_features, s = 64.0, m = 0.35): # s = 30.0, m = 0.40
+    def __init__(self, in_features, out_features, s=64.0, m=0.35):  # s = 30.0, m = 0.40
         super(CosFace, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
@@ -114,11 +114,12 @@ class CosFace(nn.Module):
         cosine = F.linear(F.normalize(input), F.normalize(self.weight))
         phi = cosine - self.m
         # --------------------------- convert label to one-hot ---------------------------
-        one_hot = torch.zeros(cosine.size(), device = 'cuda')
+        one_hot = torch.zeros(cosine.size(), device='cuda')
         # one_hot = one_hot.cuda() if cosine.is_cuda else one_hot
         one_hot.scatter_(1, label.view(-1, 1).long(), 1)
         # -------------torch.where(out_i = {x_i if condition_i else y_i) -------------
-        output = (one_hot * phi) + ((1.0 - one_hot) * cosine)  # you can use torch.where if your torch.__version__ is 0.4
+        output = (one_hot * phi) + (
+            (1.0 - one_hot) * cosine)  # you can use torch.where if your torch.__version__ is 0.4
         output *= self.s
 
         return output
@@ -139,7 +140,7 @@ class SphereFace(nn.Module):
         m: margin
         cos(m*theta)
     """
-    def __init__(self, in_features, out_features, m = 4.0):
+    def __init__(self, in_features, out_features, m=4.0):
         super(SphereFace, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
@@ -154,18 +155,14 @@ class SphereFace(nn.Module):
 
         # duplication formula
         self.mlambda = [
-            lambda x: x ** 0,
-            lambda x: x ** 1,
-            lambda x: 2 * x ** 2 - 1,
-            lambda x: 4 * x ** 3 - 3 * x,
-            lambda x: 8 * x ** 4 - 8 * x ** 2 + 1,
-            lambda x: 16 * x ** 5 - 20 * x ** 3 + 5 * x
+            lambda x: x**0, lambda x: x**1, lambda x: 2 * x**2 - 1, lambda x: 4 * x**3 - 3 * x,
+            lambda x: 8 * x**4 - 8 * x**2 + 1, lambda x: 16 * x**5 - 20 * x**3 + 5 * x
         ]
 
     def forward(self, input, label):
         # lambda = max(lambda_min,base*(1+gamma*iteration)^(-power))
         self.iter += 1
-        self.lamb = max(self.LambdaMin, self.base * (1 + self.gamma * self.iter) ** (-1 * self.power))
+        self.lamb = max(self.LambdaMin, self.base * (1 + self.gamma * self.iter)**(-1 * self.power))
 
         # --------------------------- cos(theta) & phi(theta) ---------------------------
         cos_theta = F.linear(F.normalize(input), F.normalize(self.weight))
@@ -173,7 +170,7 @@ class SphereFace(nn.Module):
         cos_m_theta = self.mlambda[self.m](cos_theta)
         theta = cos_theta.data.acos()
         k = (self.m * theta / 3.14159265).floor()
-        phi_theta = ((-1.0) ** k) * cos_m_theta - 2 * k
+        phi_theta = ((-1.0)**k) * cos_m_theta - 2 * k
         NormOfFeature = torch.norm(input, 2, 1)
 
         # --------------------------- convert label to one-hot ---------------------------
@@ -194,7 +191,7 @@ class SphereFace(nn.Module):
                + ', m = ' + str(self.m) + ')'
 
 
-def l2_norm(input, axis = 1):
+def l2_norm(input, axis=1):
     norm = torch.norm(input, 2, axis, True)
     output = torch.div(input, norm)
 
@@ -209,7 +206,7 @@ class Am_softmax(nn.Module):
         m: margin
         s: scale of outputs
     """
-    def __init__(self, in_features, out_features, m = 0.35, s = 30.0):
+    def __init__(self, in_features, out_features, m=0.35, s=30.0):
         super(Am_softmax, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
@@ -219,7 +216,7 @@ class Am_softmax(nn.Module):
         self.s = s
 
     def forward(self, embbedings, label):
-        kernel_norm = l2_norm(self.kernel, axis = 0)
+        kernel_norm = l2_norm(self.kernel, axis=0)
         cos_theta = torch.mm(embbedings, kernel_norm)
         cos_theta = cos_theta.clamp(-1, 1)  # for numerical stability
         phi = cos_theta - self.m

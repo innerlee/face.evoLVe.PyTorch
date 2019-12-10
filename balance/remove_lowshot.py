@@ -1,15 +1,18 @@
 import os, shutil
 import argparse
 
-
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description = 'remove low-shot classes')
-    parser.add_argument("-root", "--root", help = "specify your dir",default = './data/train', type = str)
-    parser.add_argument("-min_num", "--min_num", help = "remove the classes with less than min_num samples", default = 10, type = int)
+    parser = argparse.ArgumentParser(description='remove low-shot classes')
+    parser.add_argument("-root", "--root", help="specify your dir", default='./data/train', type=str)
+    parser.add_argument("-min_num",
+                        "--min_num",
+                        help="remove the classes with less than min_num samples",
+                        default=10,
+                        type=int)
     args = parser.parse_args()
 
-    root = args.root # specify your dir
-    min_num = args.min_num # remove the classes with less than min_num samples
+    root = args.root  # specify your dir
+    min_num = args.min_num  # remove the classes with less than min_num samples
 
     cwd = os.getcwd()  # delete '.DS_Store' existed in the source_root
     os.chdir(root)

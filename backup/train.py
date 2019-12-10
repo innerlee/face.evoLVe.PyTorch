@@ -66,8 +66,7 @@ if __name__ == '__main__':
         # transforms.RandomCrop([INPUT_SIZE[0], INPUT_SIZE[1]]),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        transforms.Normalize(mean=RGB_MEAN,
-                             std=RGB_STD),
+        transforms.Normalize(mean=RGB_MEAN, std=RGB_STD),
     ])
 
     dataset_train = datasets.ImageFolder(os.path.join(DATA_ROOT, 'imgs'), train_transform)
@@ -77,44 +76,50 @@ if __name__ == '__main__':
     weights = torch.DoubleTensor(weights)
     sampler = torch.utils.data.sampler.WeightedRandomSampler(weights, len(weights))
 
-    train_loader = torch.utils.data.DataLoader(
-        dataset_train, batch_size=BATCH_SIZE, sampler=sampler, pin_memory=PIN_MEMORY,
-        num_workers=NUM_WORKERS, drop_last=DROP_LAST
-    )
+    train_loader = torch.utils.data.DataLoader(dataset_train,
+                                               batch_size=BATCH_SIZE,
+                                               sampler=sampler,
+                                               pin_memory=PIN_MEMORY,
+                                               num_workers=NUM_WORKERS,
+                                               drop_last=DROP_LAST)
 
     NUM_CLASS = len(train_loader.dataset.classes)
     print("Number of Training Classes: {}".format(NUM_CLASS))
 
-    lfw, cfp_ff, cfp_fp, agedb, calfw, cplfw, vgg2_fp, lfw_issame, cfp_ff_issame, cfp_fp_issame, agedb_issame, calfw_issame, cplfw_issame, vgg2_fp_issame = get_val_data(DATA_ROOT)
+    lfw, cfp_ff, cfp_fp, agedb, calfw, cplfw, vgg2_fp, lfw_issame, cfp_ff_issame, cfp_fp_issame, agedb_issame, calfw_issame, cplfw_issame, vgg2_fp_issame = get_val_data(
+        DATA_ROOT)
 
     # ======= model & loss & optimizer =======#
-    BACKBONE_DICT = {'ResNet_50': ResNet_50(INPUT_SIZE),
-                     'ResNet_101': ResNet_101(INPUT_SIZE),
-                     'ResNet_152': ResNet_152(INPUT_SIZE),
-                     'IR_50': IR_50(INPUT_SIZE),
-                     'IR_101': IR_101(INPUT_SIZE),
-                     'IR_152': IR_152(INPUT_SIZE),
-                     'IR_SE_50': IR_SE_50(INPUT_SIZE),
-                     'IR_SE_101': IR_SE_101(INPUT_SIZE),
-                     'IR_SE_152': IR_SE_152(INPUT_SIZE)}
+    BACKBONE_DICT = {
+        'ResNet_50': ResNet_50(INPUT_SIZE),
+        'ResNet_101': ResNet_101(INPUT_SIZE),
+        'ResNet_152': ResNet_152(INPUT_SIZE),
+        'IR_50': IR_50(INPUT_SIZE),
+        'IR_101': IR_101(INPUT_SIZE),
+        'IR_152': IR_152(INPUT_SIZE),
+        'IR_SE_50': IR_SE_50(INPUT_SIZE),
+        'IR_SE_101': IR_SE_101(INPUT_SIZE),
+        'IR_SE_152': IR_SE_152(INPUT_SIZE)
+    }
     BACKBONE = BACKBONE_DICT[BACKBONE_NAME]
     print("=" * 60)
     print(BACKBONE)
     print("{} Backbone Generated".format(BACKBONE_NAME))
     print("=" * 60)
 
-    HEAD_DICT = {'ArcFace': ArcFace(in_features=EMBEDDING_SIZE, out_features=NUM_CLASS),
-                 'CosFace': CosFace(in_features=EMBEDDING_SIZE, out_features=NUM_CLASS),
-                 'SphereFace': SphereFace(in_features=EMBEDDING_SIZE, out_features=NUM_CLASS),
-                 'Am_softmax': Am_softmax(in_features=EMBEDDING_SIZE, out_features=NUM_CLASS)}
+    HEAD_DICT = {
+        'ArcFace': ArcFace(in_features=EMBEDDING_SIZE, out_features=NUM_CLASS),
+        'CosFace': CosFace(in_features=EMBEDDING_SIZE, out_features=NUM_CLASS),
+        'SphereFace': SphereFace(in_features=EMBEDDING_SIZE, out_features=NUM_CLASS),
+        'Am_softmax': Am_softmax(in_features=EMBEDDING_SIZE, out_features=NUM_CLASS)
+    }
     HEAD = HEAD_DICT[HEAD_NAME]
     print("=" * 60)
     print(HEAD)
     print("{} Head Generated".format(HEAD_NAME))
     print("=" * 60)
 
-    LOSS_DICT = {'Focal': FocalLoss(),
-                 'Softmax': nn.CrossEntropyLoss()}
+    LOSS_DICT = {'Focal': FocalLoss(), 'Softmax': nn.CrossEntropyLoss()}
     LOSS = LOSS_DICT[LOSS_NAME]
     print("=" * 60)
     print(LOSS)
@@ -123,15 +128,24 @@ if __name__ == '__main__':
 
     if BACKBONE_NAME.find("IR") >= 0:
         backbone_paras_only_bn, backbone_paras_wo_bn = separate_irse_bn_paras(
-            BACKBONE)  # separate batch_norm parameters from others; do not do weight decay for batch_norm parameters to improve the generalizability
+            BACKBONE
+        )  # separate batch_norm parameters from others; do not do weight decay for batch_norm parameters to improve the generalizability
         _, head_paras_wo_bn = separate_irse_bn_paras(HEAD)
     else:
         backbone_paras_only_bn, backbone_paras_wo_bn = separate_resnet_bn_paras(
-            BACKBONE)  # separate batch_norm parameters from others; do not do weight decay for batch_norm parameters to improve the generalizability
+            BACKBONE
+        )  # separate batch_norm parameters from others; do not do weight decay for batch_norm parameters to improve the generalizability
         _, head_paras_wo_bn = separate_resnet_bn_paras(HEAD)
-    OPTIMIZER = optim.SGD(
-        [{'params': backbone_paras_wo_bn}, {'params': backbone_paras_only_bn}, {'params': head_paras_wo_bn}], lr=LR,
-        momentum=MOMENTUM, weight_decay=WEIGHT_DECAY)
+    OPTIMIZER = optim.SGD([{
+        'params': backbone_paras_wo_bn
+    }, {
+        'params': backbone_paras_only_bn
+    }, {
+        'params': head_paras_wo_bn
+    }],
+                          lr=LR,
+                          momentum=MOMENTUM,
+                          weight_decay=WEIGHT_DECAY)
     print("=" * 60)
     print(OPTIMIZER)
     print("Optimizer Generated")
@@ -183,7 +197,7 @@ if __name__ == '__main__':
         for inputs, labels in tqdm(iter(train_loader)):
 
             if batch == STAGES[
-                0]:  # adjust LR for each training stage after warm up, you can also choose to adjust LR manually (with slight modification) once plaueau observed
+                    0]:  # adjust LR for each training stage after warm up, you can also choose to adjust LR manually (with slight modification) once plaueau observed
                 schedule_lr(OPTIMIZER)
             if batch == STAGES[1]:
                 schedule_lr(OPTIMIZER)
@@ -214,46 +228,75 @@ if __name__ == '__main__':
                 print('Epoch {}/{} Batch {}/{}\t'
                       'Training Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                       'Training Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
-                      'Training Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
-                    epoch + 1, NUM_EPOCH, batch + 1, len(train_loader) * NUM_EPOCH, loss=losses, top1=top1, top5=top5))
+                      'Training Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(epoch + 1,
+                                                                               NUM_EPOCH,
+                                                                               batch + 1,
+                                                                               len(train_loader) * NUM_EPOCH,
+                                                                               loss=losses,
+                                                                               top1=top1,
+                                                                               top5=top5))
                 print("=" * 60)
 
                 # perform validation & save checkpoints per epoch
                 # validation statistics per epoch (buffer for visualization)
                 print("=" * 60)
-                print("Perform Evaluation on LFW, CFP_FF, CFP_FP, AgeDB, CALFW, CPLFW and VGG2_FP, and Save Checkpoints...")
-                accuracy_lfw, best_threshold_lfw, roc_curve_lfw = perform_val(MULTI_GPU, DEVICE, EMBEDDING_SIZE, BATCH_SIZE, BACKBONE, lfw, lfw_issame)
+                print(
+                    "Perform Evaluation on LFW, CFP_FF, CFP_FP, AgeDB, CALFW, CPLFW and VGG2_FP, and Save Checkpoints..."
+                )
+                accuracy_lfw, best_threshold_lfw, roc_curve_lfw = perform_val(MULTI_GPU, DEVICE, EMBEDDING_SIZE,
+                                                                              BATCH_SIZE, BACKBONE, lfw, lfw_issame)
                 buffer_val(writer, "LFW", accuracy_lfw, best_threshold_lfw, roc_curve_lfw, batch + 1)
-                accuracy_cfp_ff, best_threshold_cfp_ff, roc_curve_cfp_ff = perform_val(MULTI_GPU, DEVICE, EMBEDDING_SIZE, BATCH_SIZE, BACKBONE, cfp_ff, cfp_ff_issame)
+                accuracy_cfp_ff, best_threshold_cfp_ff, roc_curve_cfp_ff = perform_val(
+                    MULTI_GPU, DEVICE, EMBEDDING_SIZE, BATCH_SIZE, BACKBONE, cfp_ff, cfp_ff_issame)
                 buffer_val(writer, "CFP_FF", accuracy_cfp_ff, best_threshold_cfp_ff, roc_curve_cfp_ff, batch + 1)
-                accuracy_cfp_fp, best_threshold_cfp_fp, roc_curve_cfp_fp = perform_val(MULTI_GPU, DEVICE, EMBEDDING_SIZE, BATCH_SIZE, BACKBONE, cfp_fp, cfp_fp_issame)
+                accuracy_cfp_fp, best_threshold_cfp_fp, roc_curve_cfp_fp = perform_val(
+                    MULTI_GPU, DEVICE, EMBEDDING_SIZE, BATCH_SIZE, BACKBONE, cfp_fp, cfp_fp_issame)
                 buffer_val(writer, "CFP_FP", accuracy_cfp_fp, best_threshold_cfp_fp, roc_curve_cfp_fp, batch + 1)
-                accuracy_agedb, best_threshold_agedb, roc_curve_agedb = perform_val(MULTI_GPU, DEVICE, EMBEDDING_SIZE, BATCH_SIZE, BACKBONE, agedb, agedb_issame)
+                accuracy_agedb, best_threshold_agedb, roc_curve_agedb = perform_val(MULTI_GPU, DEVICE, EMBEDDING_SIZE,
+                                                                                    BATCH_SIZE, BACKBONE, agedb,
+                                                                                    agedb_issame)
                 buffer_val(writer, "AgeDB", accuracy_agedb, best_threshold_agedb, roc_curve_agedb, batch + 1)
-                accuracy_calfw, best_threshold_calfw, roc_curve_calfw = perform_val(MULTI_GPU, DEVICE, EMBEDDING_SIZE, BATCH_SIZE, BACKBONE, calfw, calfw_issame)
+                accuracy_calfw, best_threshold_calfw, roc_curve_calfw = perform_val(MULTI_GPU, DEVICE, EMBEDDING_SIZE,
+                                                                                    BATCH_SIZE, BACKBONE, calfw,
+                                                                                    calfw_issame)
                 buffer_val(writer, "CALFW", accuracy_calfw, best_threshold_calfw, roc_curve_calfw, batch + 1)
-                accuracy_cplfw, best_threshold_cplfw, roc_curve_cplfw = perform_val(MULTI_GPU, DEVICE, EMBEDDING_SIZE, BATCH_SIZE, BACKBONE, cplfw, cplfw_issame)
+                accuracy_cplfw, best_threshold_cplfw, roc_curve_cplfw = perform_val(MULTI_GPU, DEVICE, EMBEDDING_SIZE,
+                                                                                    BATCH_SIZE, BACKBONE, cplfw,
+                                                                                    cplfw_issame)
                 buffer_val(writer, "CPLFW", accuracy_cplfw, best_threshold_cplfw, roc_curve_cplfw, batch + 1)
-                accuracy_vgg2_fp, best_threshold_vgg2_fp, roc_curve_vgg2_fp = perform_val(MULTI_GPU, DEVICE, EMBEDDING_SIZE, BATCH_SIZE, BACKBONE, vgg2_fp, vgg2_fp_issame)
-                buffer_val(writer, "VGGFace2_FP", accuracy_vgg2_fp, best_threshold_vgg2_fp, roc_curve_vgg2_fp, batch + 1)
-                print("Batch {}/{}, Evaluation: LFW Acc: {}, CFP_FF Acc: {}, CFP_FP Acc: {}, AgeDB Acc: {}, CALFW Acc: {}, CPLFW Acc: {}, VGG2_FP Acc: {}".format(batch + 1, len(train_loader) * NUM_EPOCH, accuracy_lfw, accuracy_cfp_ff, accuracy_cfp_fp, accuracy_agedb, accuracy_calfw, accuracy_cplfw, accuracy_vgg2_fp))
+                accuracy_vgg2_fp, best_threshold_vgg2_fp, roc_curve_vgg2_fp = perform_val(
+                    MULTI_GPU, DEVICE, EMBEDDING_SIZE, BATCH_SIZE, BACKBONE, vgg2_fp, vgg2_fp_issame)
+                buffer_val(writer, "VGGFace2_FP", accuracy_vgg2_fp, best_threshold_vgg2_fp, roc_curve_vgg2_fp,
+                           batch + 1)
+                print(
+                    "Batch {}/{}, Evaluation: LFW Acc: {}, CFP_FF Acc: {}, CFP_FP Acc: {}, AgeDB Acc: {}, CALFW Acc: {}, CPLFW Acc: {}, VGG2_FP Acc: {}"
+                    .format(batch + 1,
+                            len(train_loader) * NUM_EPOCH, accuracy_lfw, accuracy_cfp_ff, accuracy_cfp_fp,
+                            accuracy_agedb, accuracy_calfw, accuracy_cplfw, accuracy_vgg2_fp))
                 print("=" * 60)
 
                 if MULTI_GPU:
-                    torch.save(BACKBONE.module.state_dict(), os.path.join(MODEL_ROOT,
-                                                                          "Backbone_{}_Epoch_{}_Batch_{}_Time_{}_checkpoint.pth".format(
-                                                                              BACKBONE_NAME, epoch + 1, batch,
-                                                                              get_time())))
-                    torch.save(HEAD.module.state_dict(), os.path.join(MODEL_ROOT,
-                                                                      "Head_{}_Epoch_{}_Batch_{}_Time_{}_checkpoint.pth".format(
-                                                                          HEAD_NAME, epoch + 1, batch, get_time())))
+                    torch.save(
+                        BACKBONE.module.state_dict(),
+                        os.path.join(
+                            MODEL_ROOT, "Backbone_{}_Epoch_{}_Batch_{}_Time_{}_checkpoint.pth".format(
+                                BACKBONE_NAME, epoch + 1, batch, get_time())))
+                    torch.save(
+                        HEAD.module.state_dict(),
+                        os.path.join(
+                            MODEL_ROOT, "Head_{}_Epoch_{}_Batch_{}_Time_{}_checkpoint.pth".format(
+                                HEAD_NAME, epoch + 1, batch, get_time())))
                 else:
-                    torch.save(BACKBONE.state_dict(), os.path.join(MODEL_ROOT,
-                                                                   "Backbone_{}_Epoch_{}_Batch_{}_Time_{}_checkpoint.pth".format(
-                                                                       BACKBONE_NAME, epoch + 1, batch, get_time())))
-                    torch.save(HEAD.state_dict(), os.path.join(MODEL_ROOT,
-                                                               "Head_{}_Epoch_{}_Batch_{}_Time_{}_checkpoint.pth".format(
-                                                                   HEAD_NAME, epoch + 1, batch, get_time())))
+                    torch.save(
+                        BACKBONE.state_dict(),
+                        os.path.join(
+                            MODEL_ROOT, "Backbone_{}_Epoch_{}_Batch_{}_Time_{}_checkpoint.pth".format(
+                                BACKBONE_NAME, epoch + 1, batch, get_time())))
+                    torch.save(
+                        HEAD.state_dict(),
+                        os.path.join(
+                            MODEL_ROOT, "Head_{}_Epoch_{}_Batch_{}_Time_{}_checkpoint.pth".format(
+                                HEAD_NAME, epoch + 1, batch, get_time())))
 
             batch += 1  # batch index
 

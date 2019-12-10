@@ -17,18 +17,17 @@ def process_image(img):
     resize_img = cv2.resize(img, (new_w, new_h))
     if new_w % 2 != 0 and new_h % 2 == 0:
         top, bottom, left, right = (min_side - new_h) / 2, (min_side - new_h) / 2, (min_side - new_w) / 2 + 1, (
-                    min_side - new_w) / 2
+            min_side - new_w) / 2
     elif new_h % 2 != 0 and new_w % 2 == 0:
         top, bottom, left, right = (min_side - new_h) / 2 + 1, (min_side - new_h) / 2, (min_side - new_w) / 2, (
-                    min_side - new_w) / 2
+            min_side - new_w) / 2
     elif new_h % 2 == 0 and new_w % 2 == 0:
-        top, bottom, left, right = (min_side - new_h) / 2, (min_side - new_h) / 2, (min_side - new_w) / 2, (
-                    min_side - new_w) / 2
+        top, bottom, left, right = (min_side - new_h) / 2, (min_side - new_h) / 2, (min_side - new_w) / 2, (min_side -
+                                                                                                            new_w) / 2
     else:
         top, bottom, left, right = (min_side - new_h) / 2 + 1, (min_side - new_h) / 2, (min_side - new_w) / 2 + 1, (
-                    min_side - new_w) / 2
-    pad_img = cv2.copyMakeBorder(resize_img, top, bottom, left, right, cv2.BORDER_CONSTANT,
-                                 value=[0, 0, 0])
+            min_side - new_w) / 2
+    pad_img = cv2.copyMakeBorder(resize_img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0])
 
     return pad_img
 
@@ -66,4 +65,4 @@ def main(source_root):
 
 if __name__ == "__main__":
     min_side = 512
-    main(source_root = "/media/pc/6T/jasonjzhao/data/MS-Celeb-1M/database/base")
+    main(source_root="/media/pc/6T/jasonjzhao/data/MS-Celeb-1M/database/base")

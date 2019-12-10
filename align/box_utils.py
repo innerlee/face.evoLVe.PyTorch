@@ -2,7 +2,7 @@ import numpy as np
 from PIL import Image
 
 
-def nms(boxes, overlap_threshold = 0.5, mode = 'union'):
+def nms(boxes, overlap_threshold=0.5, mode='union'):
     """Non-maximum suppression.
 
     Arguments:
@@ -25,7 +25,7 @@ def nms(boxes, overlap_threshold = 0.5, mode = 'union'):
     # grab the coordinates of the bounding boxes
     x1, y1, x2, y2, score = [boxes[:, i] for i in range(5)]
 
-    area = (x2 - x1 + 1.0)*(y2 - y1 + 1.0)
+    area = (x2 - x1 + 1.0) * (y2 - y1 + 1.0)
     ids = np.argsort(score)  # in increasing order
 
     while len(ids) > 0:
@@ -54,16 +54,13 @@ def nms(boxes, overlap_threshold = 0.5, mode = 'union'):
         # intersections' areas
         inter = w * h
         if mode == 'min':
-            overlap = inter/np.minimum(area[i], area[ids[:last]])
+            overlap = inter / np.minimum(area[i], area[ids[:last]])
         elif mode == 'union':
             # intersection over union (IoU)
-            overlap = inter/(area[i] + area[ids[:last]] - inter)
+            overlap = inter / (area[i] + area[ids[:last]] - inter)
 
         # delete all boxes where overlap is too big
-        ids = np.delete(
-            ids,
-            np.concatenate([[last], np.where(overlap > overlap_threshold)[0]])
-        )
+        ids = np.delete(ids, np.concatenate([[last], np.where(overlap > overlap_threshold)[0]]))
 
     return pick
 
@@ -84,8 +81,8 @@ def convert_to_square(bboxes):
     h = y2 - y1 + 1.0
     w = x2 - x1 + 1.0
     max_side = np.maximum(h, w)
-    square_bboxes[:, 0] = x1 + w*0.5 - max_side*0.5
-    square_bboxes[:, 1] = y1 + h*0.5 - max_side*0.5
+    square_bboxes[:, 0] = x1 + w * 0.5 - max_side * 0.5
+    square_bboxes[:, 1] = y1 + h * 0.5 - max_side * 0.5
     square_bboxes[:, 2] = square_bboxes[:, 0] + max_side - 1.0
     square_bboxes[:, 3] = square_bboxes[:, 1] + max_side - 1.0
     return square_bboxes
@@ -119,12 +116,12 @@ def calibrate_box(bboxes, offsets):
     # are offsets always such that
     # x1 < x2 and y1 < y2 ?
 
-    translation = np.hstack([w, h, w, h])*offsets
+    translation = np.hstack([w, h, w, h]) * offsets
     bboxes[:, 0:4] = bboxes[:, 0:4] + translation
     return bboxes
 
 
-def get_image_boxes(bounding_boxes, img, size = 24):
+def get_image_boxes(bounding_boxes, img, size=24):
     """Cut out boxes from the image.
 
     Arguments:
@@ -182,7 +179,7 @@ def correct_bboxes(bboxes, width, height):
     """
 
     x1, y1, x2, y2 = [bboxes[:, i] for i in range(4)]
-    w, h = x2 - x1 + 1.0,  y2 - y1 + 1.0
+    w, h = x2 - x1 + 1.0, y2 - y1 + 1.0
     num_boxes = bboxes.shape[0]
 
     # 'e' stands for end
@@ -194,7 +191,7 @@ def correct_bboxes(bboxes, width, height):
     # in the image.
     # (dx, dy, edx, edy) are coordinates of the box in the cutout
     # from the image.
-    dx, dy = np.zeros((num_boxes,)), np.zeros((num_boxes,))
+    dx, dy = np.zeros((num_boxes, )), np.zeros((num_boxes, ))
     edx, edy = w.copy() - 1.0, h.copy() - 1.0
 
     # if box's bottom right corner is too far right

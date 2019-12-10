@@ -4,7 +4,6 @@ from torch.nn import Linear, Conv2d, BatchNorm1d, BatchNorm2d, PReLU, ReLU, Sigm
     AdaptiveAvgPool2d, Sequential, Module
 from collections import namedtuple
 
-
 # Support: ['IR_50', 'IR_101', 'IR_152', 'IR_SE_50', 'IR_SE_101', 'IR_SE_152']
 
 
@@ -24,14 +23,12 @@ class SEModule(Module):
     def __init__(self, channels, reduction):
         super(SEModule, self).__init__()
         self.avg_pool = AdaptiveAvgPool2d(1)
-        self.fc1 = Conv2d(
-            channels, channels // reduction, kernel_size=1, padding=0, bias=False)
+        self.fc1 = Conv2d(channels, channels // reduction, kernel_size=1, padding=0, bias=False)
 
         nn.init.xavier_uniform_(self.fc1.weight.data)
 
         self.relu = ReLU(inplace=True)
-        self.fc2 = Conv2d(
-            channels // reduction, channels, kernel_size=1, padding=0, bias=False)
+        self.fc2 = Conv2d(channels // reduction, channels, kernel_size=1, padding=0, bias=False)
 
         self.sigmoid = Sigmoid()
 
@@ -52,12 +49,10 @@ class bottleneck_IR(Module):
         if in_channel == depth:
             self.shortcut_layer = MaxPool2d(1, stride)
         else:
-            self.shortcut_layer = Sequential(
-                Conv2d(in_channel, depth, (1, 1), stride, bias=False), BatchNorm2d(depth))
-        self.res_layer = Sequential(
-            BatchNorm2d(in_channel),
-            Conv2d(in_channel, depth, (3, 3), (1, 1), 1, bias=False), PReLU(depth),
-            Conv2d(depth, depth, (3, 3), stride, 1, bias=False), BatchNorm2d(depth))
+            self.shortcut_layer = Sequential(Conv2d(in_channel, depth, (1, 1), stride, bias=False), BatchNorm2d(depth))
+        self.res_layer = Sequential(BatchNorm2d(in_channel), Conv2d(in_channel, depth, (3, 3), (1, 1), 1, bias=False),
+                                    PReLU(depth), Conv2d(depth, depth, (3, 3), stride, 1, bias=False),
+                                    BatchNorm2d(depth))
 
     def forward(self, x):
         shortcut = self.shortcut_layer(x)
@@ -72,17 +67,10 @@ class bottleneck_IR_SE(Module):
         if in_channel == depth:
             self.shortcut_layer = MaxPool2d(1, stride)
         else:
-            self.shortcut_layer = Sequential(
-                Conv2d(in_channel, depth, (1, 1), stride, bias=False),
-                BatchNorm2d(depth))
-        self.res_layer = Sequential(
-            BatchNorm2d(in_channel),
-            Conv2d(in_channel, depth, (3, 3), (1, 1), 1, bias=False),
-            PReLU(depth),
-            Conv2d(depth, depth, (3, 3), stride, 1, bias=False),
-            BatchNorm2d(depth),
-            SEModule(depth, 16)
-        )
+            self.shortcut_layer = Sequential(Conv2d(in_channel, depth, (1, 1), stride, bias=False), BatchNorm2d(depth))
+        self.res_layer = Sequential(BatchNorm2d(in_channel), Conv2d(in_channel, depth, (3, 3), (1, 1), 1, bias=False),
+                                    PReLU(depth), Conv2d(depth, depth, (3, 3), stride, 1, bias=False),
+                                    BatchNorm2d(depth), SEModule(depth, 16))
 
     def forward(self, x):
         shortcut = self.shortcut_layer(x)
@@ -137,29 +125,18 @@ class Backbone(Module):
             unit_module = bottleneck_IR
         elif mode == 'ir_se':
             unit_module = bottleneck_IR_SE
-        self.input_layer = Sequential(Conv2d(3, 64, (3, 3), 1, 1, bias=False),
-                                      BatchNorm2d(64),
-                                      PReLU(64))
+        self.input_layer = Sequential(Conv2d(3, 64, (3, 3), 1, 1, bias=False), BatchNorm2d(64), PReLU(64))
         if input_size[0] == 112:
-            self.output_layer = Sequential(BatchNorm2d(512),
-                                           Dropout(),
-                                           Flatten(),
-                                           Linear(512 * 7 * 7, 512),
+            self.output_layer = Sequential(BatchNorm2d(512), Dropout(), Flatten(), Linear(512 * 7 * 7, 512),
                                            BatchNorm1d(512))
         else:
-            self.output_layer = Sequential(BatchNorm2d(512),
-                                           Dropout(),
-                                           Flatten(),
-                                           Linear(512 * 14 * 14, 512),
+            self.output_layer = Sequential(BatchNorm2d(512), Dropout(), Flatten(), Linear(512 * 14 * 14, 512),
                                            BatchNorm1d(512))
 
         modules = []
         for block in blocks:
             for bottleneck in block:
-                modules.append(
-                    unit_module(bottleneck.in_channel,
-                                bottleneck.depth,
-                                bottleneck.stride))
+                modules.append(unit_module(bottleneck.in_channel, bottleneck.depth, bottleneck.stride))
         self.body = Sequential(*modules)
 
         self._initialize_weights()
