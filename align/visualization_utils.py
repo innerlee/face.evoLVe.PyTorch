@@ -15,6 +15,8 @@ def show_results(img, bounding_boxes, facial_landmarks=[]):
 
     for b in bounding_boxes:
         draw.rectangle([(b[0], b[1]), (b[2], b[3])], outline='white')
+        draw.rectangle([(b[0]+2, b[1]+2), (b[2]-2, b[3]-2)], outline='white')
+        draw.rectangle([(b[0]+1, b[1]+1), (b[2]-1, b[3]-1)], outline='red')
 
     inx = 0
     for p in facial_landmarks:
