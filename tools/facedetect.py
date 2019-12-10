@@ -1,7 +1,7 @@
 import argparse
 from PIL import Image
-from evolveface.align.detector import detect_faces
-from evolveface.align.visualization_utils import show_results
+from evolveface import detect_faces
+from evolveface import show_results
 
 parser = argparse.ArgumentParser(description='find face')
 parser.add_argument("input", help="input image", type=str)

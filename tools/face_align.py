@@ -1,5 +1,5 @@
 from PIL import Image
-from detector import detect_faces
+from evolveface.align.detector import detect_faces
 from align_trans import get_reference_facial_points, warp_and_crop_face
 import numpy as np
 import os
