@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from matlab_cp2tform import get_similarity_transform_for_cv2
+from .matlab_cp2tform import get_similarity_transform_for_cv2
 
 # reference facial points, a list of coordinates (x,y)
 REFERENCE_FACIAL_POINTS = [  # default reference facial points for crop_size = (112, 112); should adjust REFERENCE_FACIAL_POINTS accordingly for other crop_size
