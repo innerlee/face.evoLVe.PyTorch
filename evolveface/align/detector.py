@@ -46,9 +46,6 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8], nms_thre
         factor_count += 1
 
     # STAGE 1
-
-    # it will be returned
-
     # run P-Net on different scales
     args = []
     for s in scales:
