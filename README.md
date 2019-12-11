@@ -1,3 +1,12 @@
+### Speed up
+
+https://github.com/uploadcare/pillow-simd/
+
+```bash
+pip uninstall pillow
+CC="cc -mavx2" pip install -U --force-reinstall pillow-simd
+```
+
 # face.evoLVe: High-Performance Face Recognition Library based on PyTorch
 
 -   Evolve to be more comprehensive, effective and efficient for face related analytics \& applications! ([WeChat News](https://mp.weixin.qq.com/s/V8VoyMqVvjblH358ozcWEg))

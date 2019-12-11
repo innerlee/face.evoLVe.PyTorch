@@ -23,6 +23,7 @@ def run_first_stage(args):
             bounding boxes with scores and offsets (4 + 1 + 4).
     """
     imgs = []
+    imgt = args[0][0]
     for image, net, scale, threshold in args:
         # scale the image and convert it to a float array
         width, height = image.size
