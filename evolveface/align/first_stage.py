@@ -6,7 +6,7 @@ import numpy as np
 from .box_utils import nms, _preprocess
 
 
-def run_first_stage(image, net, scale, threshold):
+def run_first_stage(args):
     """Run P-Net, generate bounding boxes, and do NMS.
 
     Arguments:
@@ -22,28 +22,35 @@ def run_first_stage(image, net, scale, threshold):
         a float numpy array of shape [n_boxes, 9],
             bounding boxes with scores and offsets (4 + 1 + 4).
     """
+    imgs = []
+    for image, net, scale, threshold in args:
+        # scale the image and convert it to a float array
+        width, height = image.size
+        sw, sh = math.ceil(width * scale), math.ceil(height * scale)
+        img = image.resize((sw, sh), Image.BILINEAR)
+        img = np.asarray(img, 'float32')
 
-    # scale the image and convert it to a float array
-    width, height = image.size
-    sw, sh = math.ceil(width * scale), math.ceil(height * scale)
-    img = image.resize((sw, sh), Image.BILINEAR)
-    img = np.asarray(img, 'float32')
+        img = torch.FloatTensor(_preprocess(img)).to("cuda:0")
+        imgs.append(img)
 
-    img = torch.FloatTensor(_preprocess(img)).to("cuda:0")
+    outputs = []
     with torch.no_grad():
-        output = net(img)
-    probs = output[1].cpu().data.numpy()[0, 1, :, :]
-    offsets = output[0].cpu().data.numpy()
-    # probs: probability of a face at each sliding window
-    # offsets: transformations to true bounding boxes
+        for img in imgs:
+            outputs.append(net(img))
 
-    boxes = _generate_bboxes(probs, offsets, scale, threshold)
-    if len(boxes) == 0:
-        return None
+    allboxes = []
+    for output, (_, _, scale, threshold) in zip(outputs, args):
+        probs = output[1].cpu().data.numpy()[0, 1, :, :]
+        offsets = output[0].cpu().data.numpy()
+        # probs: probability of a face at each sliding window
+        # offsets: transformations to true bounding boxes
+        boxes = _generate_bboxes(probs, offsets, scale, threshold)
+        if len(boxes) == 0:
+            continue
+        keep = nms(boxes[:, 0:5], overlap_threshold=0.5)
+        allboxes.append(boxes[keep])
 
-    keep = nms(boxes[:, 0:5], overlap_threshold=0.5)
-    return boxes[keep]
-
+    return allboxes
 
 def _generate_bboxes(probs, offsets, scale, threshold):
     """Generate bounding boxes at places
