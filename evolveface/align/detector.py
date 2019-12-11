@@ -18,6 +18,8 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8], nms_thre
         bounding boxes and facial landmarks.
     """
 
+    img_array = np.asarray(image, 'uint8')
+
     # LOAD MODELS
     pnet = PNET
     rnet = RNET
@@ -69,7 +71,7 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8], nms_thre
 
     # STAGE 2
 
-    img_boxes = get_image_boxes(bounding_boxes, image, size=24)
+    img_boxes = get_image_boxes(bounding_boxes, img_array, width, height, size=24)
     img_boxes = torch.FloatTensor(img_boxes).to("cuda:0")
     output = rnet(img_boxes)
     offsets = output[0].cpu().data.numpy()  # shape [n_boxes, 4]
@@ -88,7 +90,7 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8], nms_thre
 
     # STAGE 3
 
-    img_boxes = get_image_boxes(bounding_boxes, image, size=48)
+    img_boxes = get_image_boxes(bounding_boxes, img_array, width, height, size=48)
     if len(img_boxes) == 0:
         return [], []
     img_boxes = torch.FloatTensor(img_boxes).to("cuda:0")

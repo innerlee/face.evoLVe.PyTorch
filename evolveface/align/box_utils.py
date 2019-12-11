@@ -121,7 +121,7 @@ def calibrate_box(bboxes, offsets):
     return bboxes
 
 
-def get_image_boxes(bounding_boxes, img, size=24):
+def get_image_boxes(bounding_boxes, img_array, width, height, size=24):
     """Cut out boxes from the image.
 
     Arguments:
@@ -134,8 +134,6 @@ def get_image_boxes(bounding_boxes, img, size=24):
     """
 
     num_boxes = len(bounding_boxes)
-    width, height = img.size
-    img_array = np.asarray(img, 'uint8')
 
     [dy, edy, dx, edx, y, ey, x, ex, w, h] = correct_bboxes(bounding_boxes, width, height)
     img_boxes = np.zeros((num_boxes, 3, size, size), 'float32')
