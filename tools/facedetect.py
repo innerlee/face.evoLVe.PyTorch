@@ -3,6 +3,7 @@ from PIL import Image
 import numpy as np
 from evolveface import detect_faces, show_results
 from evolveface import get_reference_facial_points, warp_and_crop_face
+import time
 
 parser = argparse.ArgumentParser(description='find face')
 parser.add_argument("-i", "--input", help="input image", type=str, default='play/1.jpg')
@@ -14,7 +15,10 @@ scale = crop_size / 112.
 reference = get_reference_facial_points(default_square=True) * scale
 
 img = Image.open(args.input)
+start = time.time()
 bounding_boxes, landmarks = detect_faces(img)
+end = time.time()
+print(end - start)
 show_results(img, bounding_boxes, landmarks).save('x.jpg')
 
 for i in range(len(landmarks)):
