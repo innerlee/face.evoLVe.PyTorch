@@ -3,6 +3,7 @@ x.jpg
 y*.jpg
 **/models/
 data/
+out/
 
 
 # Byte-compiled / optimized / DLL files
