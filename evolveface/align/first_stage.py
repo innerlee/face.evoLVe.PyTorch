@@ -41,8 +41,8 @@ def run_first_stage(args):
 
     allboxes = []
     for output, (_, _, _, scale, threshold) in zip(outputs, args):
-        probs = output[1][0, 1, :, :].cpu().numpy()
-        offsets = output[0].cpu().numpy()
+        probs = output[1][0, 1, :, :]
+        offsets = output[0]
         # probs: probability of a face at each sliding window
         # offsets: transformations to true bounding boxes
         boxes = _generate_bboxes(probs, offsets, scale, threshold)
@@ -73,11 +73,10 @@ def _generate_bboxes(probs, offsets, scale, threshold):
     # moving 12x12 window with stride 2
     stride = 2
     cell_size = 12
-
     # indices of boxes where there is probably a face
-    inds = np.where(probs > threshold)
+    inds = torch.where(probs > threshold)
 
-    if inds[0].size == 0:
+    if inds[0].size(0) == 0:
         return np.array([])
 
     # transformations of bounding boxes
@@ -90,17 +89,16 @@ def _generate_bboxes(probs, offsets, scale, threshold):
     # y1_true = y1 + ty1*h
     # y2_true = y2 + ty2*h
 
-    offsets = np.array([tx1, ty1, tx2, ty2])
+    offsets = torch.stack([tx1, ty1, tx2, ty2])
     score = probs[inds[0], inds[1]]
-
     # P-Net is applied to scaled images
     # so we need to rescale bounding boxes back
-    bounding_boxes = np.vstack([
-        np.round((stride * inds[1] + 1.0) / scale),
-        np.round((stride * inds[0] + 1.0) / scale),
-        np.round((stride * inds[1] + 1.0 + cell_size) / scale),
-        np.round((stride * inds[0] + 1.0 + cell_size) / scale), score, offsets
-    ])
+    bounding_boxes = torch.cat([
+        torch.round((stride * inds[1].float() + 1.0) / scale)[None, :],
+        torch.round((stride * inds[0].float() + 1.0) / scale)[None, :],
+        torch.round((stride * inds[1].float() + 1.0 + cell_size) / scale)[None, :],
+        torch.round((stride * inds[0].float() + 1.0 + cell_size) / scale)[None, :], score[None, :], offsets
+    ]).permute(1, 0).cpu().numpy()
     # why one is added?
 
-    return bounding_boxes.T
+    return bounding_boxes
