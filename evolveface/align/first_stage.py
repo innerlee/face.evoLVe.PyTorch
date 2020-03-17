@@ -40,8 +40,8 @@ def run_first_stage(args):
 
     allboxes = []
     for output, (_, _, scale, threshold) in zip(outputs, args):
-        probs = output[1].cpu().data.numpy()[0, 1, :, :]
-        offsets = output[0].cpu().data.numpy()
+        probs = output[1][0, 1, :, :].cpu().numpy()
+        offsets = output[0].cpu().numpy()
         # probs: probability of a face at each sliding window
         # offsets: transformations to true bounding boxes
         boxes = _generate_bboxes(probs, offsets, scale, threshold)
