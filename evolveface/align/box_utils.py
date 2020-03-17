@@ -1,5 +1,6 @@
 import numpy as np
 from PIL import Image
+import cv2
 
 
 def nms(boxes, overlap_threshold=0.5, mode='union'):
@@ -143,10 +144,7 @@ def get_image_boxes(bounding_boxes, img_array, width, height, size=24):
         img_box[dy[i]:(edy[i] + 1), dx[i]:(edx[i] + 1), :] = img_array[y[i]:(ey[i] + 1), x[i]:(ex[i] + 1), :]
 
         # resize
-        img_box = Image.fromarray(img_box)
-        img_box = img_box.resize((size, size), Image.BILINEAR)
-        img_box = np.asarray(img_box, 'float32')
-
+        img_box = cv2.resize(img_box, (size, size), cv2.INTER_LINEAR)
         img_boxes[i, :, :, :] = _preprocess(img_box)
 
     return img_boxes
