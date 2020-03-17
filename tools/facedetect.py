@@ -15,9 +15,11 @@ crop_size = args.crop_size
 scale = crop_size / 112.
 reference = get_reference_facial_points(default_square=True) * scale
 
-img = Image.open(args.input)
+img = Image.open(args.input).convert('RGB')
 start = time.time()
 bounding_boxes, landmarks = detect_faces(img)
+print(bounding_boxes)
+print(len(bounding_boxes))
 end = time.time()
 print(end - start)
 show_results(img, bounding_boxes, landmarks).save(args.out)
