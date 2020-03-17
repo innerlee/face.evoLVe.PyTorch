@@ -29,7 +29,7 @@ def run_first_stage(args):
         width, height = image.size
         sw, sh = math.ceil(width * scale), math.ceil(height * scale)
         img = image.resize((sw, sh), Image.BILINEAR)
-        img = torch.Tensor(np.array(img)).to("cuda:0")
+        img = torch.from_numpy(np.array(img)).to("cuda:0")
         img = _preprocess_gpu(img)
         imgs.append(img)
 
