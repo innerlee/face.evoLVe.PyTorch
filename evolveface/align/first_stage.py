@@ -4,6 +4,7 @@ import math
 from PIL import Image
 import numpy as np
 from .box_utils import nms, _preprocess, _preprocess_gpu
+import cv2
 
 
 def run_first_stage(args):
@@ -24,12 +25,12 @@ def run_first_stage(args):
     """
     imgs = []
     imgt = args[0][0]
-    for image, net, scale, threshold in args:
+    for image, size, net, scale, threshold in args:
         # scale the image and convert it to a float array
-        width, height = image.size
+        width, height = size
         sw, sh = math.ceil(width * scale), math.ceil(height * scale)
-        img = image.resize((sw, sh), Image.BILINEAR)
-        img = torch.from_numpy(np.array(img)).to("cuda:0")
+        img = cv2.resize(image, (sw, sh), cv2.INTER_LINEAR)
+        img = torch.from_numpy(img).to("cuda:0")
         img = _preprocess_gpu(img)
         imgs.append(img)
 
@@ -39,7 +40,7 @@ def run_first_stage(args):
             outputs.append(net(img))
 
     allboxes = []
-    for output, (_, _, scale, threshold) in zip(outputs, args):
+    for output, (_, _, _, scale, threshold) in zip(outputs, args):
         probs = output[1][0, 1, :, :].cpu().numpy()
         offsets = output[0].cpu().numpy()
         # probs: probability of a face at each sliding window
@@ -51,6 +52,7 @@ def run_first_stage(args):
         allboxes.append(boxes[keep])
 
     return allboxes
+
 
 def _generate_bboxes(probs, offsets, scale, threshold):
     """Generate bounding boxes at places

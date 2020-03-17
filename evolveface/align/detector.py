@@ -21,7 +21,7 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8], nms_thre
     if isinstance(image, str):
         image = Image.open(image).convert('RGB')
 
-    img_array = np.asarray(image, 'uint8')
+    img_array = np.array(image)
 
     # LOAD MODELS
     pnet = PNET
@@ -54,7 +54,7 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8], nms_thre
     # run P-Net on different scales
     args = []
     for s in scales:
-        args.append((image, pnet, s, thresholds[0]))
+        args.append((img_array, image.size, pnet, s, thresholds[0]))
 
     bounding_boxes = run_first_stage(args)
 
