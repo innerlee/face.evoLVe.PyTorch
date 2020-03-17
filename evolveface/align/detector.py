@@ -1,4 +1,5 @@
 import numpy as np
+from PIL import Image
 import torch
 from .get_nets import PNET, RNET, ONET
 from .box_utils import nms, calibrate_box, get_image_boxes, convert_to_square
@@ -17,6 +18,8 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8], nms_thre
         two float numpy arrays of shapes [n_boxes, 4] and [n_boxes, 10],
         bounding boxes and facial landmarks.
     """
+    if isinstance(image, str):
+        image = Image.open(image).convert('RGB')
 
     img_array = np.asarray(image, 'uint8')
 
