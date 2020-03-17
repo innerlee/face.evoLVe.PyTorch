@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import argparse
 from PIL import Image
 import numpy as np
@@ -19,7 +20,7 @@ start = time.time()
 bounding_boxes, landmarks = detect_faces(img)
 end = time.time()
 print(end - start)
-show_results(img, bounding_boxes, landmarks).save('x.jpg')
+show_results(img, bounding_boxes, landmarks).save(args.out)
 
 for i in range(len(landmarks)):
     facial5points = [[landmarks[i][j], landmarks[i][j + 5]] for j in range(5)]
