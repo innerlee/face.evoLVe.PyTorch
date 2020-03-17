@@ -229,3 +229,17 @@ def _preprocess(img):
     img = np.expand_dims(img, 0)
     img = (img - 127.5) * 0.0078125
     return img
+
+
+def _preprocess_gpu(img):
+    """Preprocessing step before feeding the network.
+
+    Arguments:
+        img: a float numpy array of shape [h, w, c].
+
+    Returns:
+        a float numpy array of shape [1, c, h, w].
+    """
+    img = img.permute(2, 0, 1)[None, :, :, :]
+    img = (img.float() - 127.5) * 0.0078125
+    return img

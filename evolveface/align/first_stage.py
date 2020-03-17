@@ -3,7 +3,7 @@ from torch.autograd import Variable
 import math
 from PIL import Image
 import numpy as np
-from .box_utils import nms, _preprocess
+from .box_utils import nms, _preprocess, _preprocess_gpu
 
 
 def run_first_stage(args):
@@ -29,9 +29,8 @@ def run_first_stage(args):
         width, height = image.size
         sw, sh = math.ceil(width * scale), math.ceil(height * scale)
         img = image.resize((sw, sh), Image.BILINEAR)
-        img = np.asarray(img, 'float32')
-
-        img = torch.FloatTensor(_preprocess(img)).to("cuda:0")
+        img = torch.Tensor(np.array(img)).to("cuda:0")
+        img = _preprocess_gpu(img)
         imgs.append(img)
 
     outputs = []
