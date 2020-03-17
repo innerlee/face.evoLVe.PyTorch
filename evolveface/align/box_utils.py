@@ -58,9 +58,8 @@ def nms(boxes, overlap_threshold=0.5, mode='union'):
         elif mode == 'union':
             # intersection over union (IoU)
             overlap = inter / (area[i] + area[ids[:last]] - inter)
-
         # delete all boxes where overlap is too big
-        ids = np.delete(ids, np.concatenate([[last], np.where(overlap > overlap_threshold)[0]]))
+        ids = ids[:-1][np.where(overlap <= overlap_threshold)]
 
     return pick
 
