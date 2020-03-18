@@ -31,8 +31,7 @@ def run_first_stage(args):
         width, height = size
         sw, sh = math.ceil(width * scale), math.ceil(height * scale)
         img = cv2.resize(image, (sw, sh), cv2.INTER_LINEAR)
-        img = torch.from_numpy(img.transpose(2, 0, 1)[None, :, :, :]).to("cuda:0")
-        img = img.float()
+        img = torch.from_numpy(img.transpose(2, 0, 1)[None, :, :, :]).to("cuda:0").float()
         img.sub_(127.5).mul_(0.0078125)
         imgs.append(img)
 
