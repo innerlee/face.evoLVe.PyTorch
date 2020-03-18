@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 import cv2
-
+import torch
 
 def nms(boxes, overlap_threshold=0.5, mode='union'):
     """Non-maximum suppression.
@@ -136,7 +136,7 @@ def get_image_boxes(bounding_boxes, img_array, width, height, size=24):
     num_boxes = len(bounding_boxes)
 
     [dy, edy, dx, edx, y, ey, x, ex, w, h] = correct_bboxes(bounding_boxes, width, height)
-    img_boxes = np.empty((num_boxes, 3, size, size), 'float32')
+    img_boxes = []
 
     for i in range(num_boxes):
         img_box = np.zeros((h[i], w[i], 3), 'uint8')
@@ -145,12 +145,11 @@ def get_image_boxes(bounding_boxes, img_array, width, height, size=24):
 
         # resize
         img_box = cv2.resize(img_box, (size, size), cv2.INTER_LINEAR)
-        img_box = (img_box - 127.5) * 0.0078125
-        img_boxes[i, 0, :, :] = img_box[:, :, 0]
-        img_boxes[i, 1, :, :] = img_box[:, :, 1]
-        img_boxes[i, 2, :, :] = img_box[:, :, 2]
-
-    return img_boxes
+        img_box = torch.from_numpy(img_box).to('cuda:0')
+        img_box = _preprocess_gpu(img_box)
+        img_boxes.append(img_box)
+        # img_boxes[i, :, :, :] = _preprocess(img_box)
+    return torch.cat(img_boxes)
 
 
 def correct_bboxes(bboxes, width, height):
