@@ -147,7 +147,9 @@ def get_image_boxes(bounding_boxes, img_array, width, height, size=24):
         # resize
         img_box = cv2.resize(img_box, (size, size), cv2.INTER_LINEAR)
         img_boxes.append(img_box)
-
+    # import ipdb; ipdb.set_trace()
+    if len(img_boxes) == 0:
+        return []
     img_boxes = torch.from_numpy(np.array(img_boxes).transpose(0, 3, 1, 2)).to('cuda:0').float()
     img_boxes.sub_(127.5).mul_(0.0078125)
     return img_boxes

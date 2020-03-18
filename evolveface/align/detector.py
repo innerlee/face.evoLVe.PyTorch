@@ -78,7 +78,8 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8], nms_thre
     # STAGE 2
 
     img_boxes = get_image_boxes(bounding_boxes, img_array, width, height, size=24)
-    # img_boxes = torch.from_numpy(img_boxes).to("cuda:0")
+    if len(img_boxes) == 0:
+        return [], []
     with torch.no_grad():
         output = rnet(img_boxes)
     offsets = output[0].cpu().numpy()  # shape [n_boxes, 4]
