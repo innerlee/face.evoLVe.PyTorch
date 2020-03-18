@@ -136,7 +136,7 @@ def get_image_boxes(bounding_boxes, img_array, width, height, size=24):
     num_boxes = len(bounding_boxes)
 
     [dy, edy, dx, edx, y, ey, x, ex, w, h] = correct_bboxes(bounding_boxes, width, height)
-    img_boxes = np.zeros((num_boxes, 3, size, size), 'float32')
+    img_boxes = np.empty((num_boxes, 3, size, size), 'float32')
 
     for i in range(num_boxes):
         img_box = np.zeros((h[i], w[i], 3), 'uint8')
@@ -145,7 +145,10 @@ def get_image_boxes(bounding_boxes, img_array, width, height, size=24):
 
         # resize
         img_box = cv2.resize(img_box, (size, size), cv2.INTER_LINEAR)
-        img_boxes[i, :, :, :] = _preprocess(img_box)
+        img_box = (img_box - 127.5) * 0.0078125
+        img_boxes[i, 0, :, :] = img_box[:, :, 0]
+        img_boxes[i, 1, :, :] = img_box[:, :, 1]
+        img_boxes[i, 2, :, :] = img_box[:, :, 2]
 
     return img_boxes
 
