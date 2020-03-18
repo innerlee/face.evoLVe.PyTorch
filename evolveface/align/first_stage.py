@@ -1,5 +1,6 @@
 import torch
 from torch.autograd import Variable
+import torchvision as tv
 import math
 from PIL import Image
 import numpy as np
@@ -48,7 +49,8 @@ def run_first_stage(args):
         boxes = _generate_bboxes(probs, offsets, scale, threshold)
         if len(boxes) == 0:
             continue
-        keep = nms(boxes[:, 0:5], overlap_threshold=0.5)
+        # keep = nms(boxes[:, 0:5], overlap_threshold=0.5)
+        keep = tv.ops.nms(boxes[:, :4], boxes[:, 4], 0.5)
         allboxes.append(boxes[keep])
 
     return allboxes
@@ -98,7 +100,7 @@ def _generate_bboxes(probs, offsets, scale, threshold):
         torch.round((stride * inds[0].float() + 1.0) / scale)[None, :],
         torch.round((stride * inds[1].float() + 1.0 + cell_size) / scale)[None, :],
         torch.round((stride * inds[0].float() + 1.0 + cell_size) / scale)[None, :], score[None, :], offsets
-    ]).permute(1, 0).cpu().numpy()
+    ]).permute(1, 0)
     # why one is added?
 
     return bounding_boxes

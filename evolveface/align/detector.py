@@ -1,6 +1,7 @@
 import numpy as np
 from PIL import Image
 import torch
+import torchvision as tv
 from .get_nets import PNET, RNET, ONET
 from .box_utils import nms, calibrate_box, get_image_boxes, convert_to_square
 from .first_stage import run_first_stage
@@ -57,15 +58,15 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8], nms_thre
         args.append((img_array, image.size, pnet, s, thresholds[0]))
 
     bounding_boxes = run_first_stage(args)
-
     # collect boxes (and offsets, and scores) from different scales
     bounding_boxes = [i for i in bounding_boxes if i is not None]
     if len(bounding_boxes) == 0:
         return [], []
-    bounding_boxes = np.vstack(bounding_boxes)
+    bounding_boxes = torch.cat(bounding_boxes)
 
-    keep = nms(bounding_boxes[:, 0:5], nms_thresholds[0])
-    bounding_boxes = bounding_boxes[keep]
+    # keep = nms(bounding_boxes.cpu().numpy()[:, 0:5], nms_thresholds[0])
+    keep = tv.ops.nms(bounding_boxes[:, :4], bounding_boxes[:, 4], nms_thresholds[0])
+    bounding_boxes = bounding_boxes[keep].cpu().numpy()
 
     # use offsets predicted by pnet to transform bounding boxes
     bounding_boxes = calibrate_box(bounding_boxes[:, 0:5], bounding_boxes[:, 5:])
@@ -78,9 +79,10 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8], nms_thre
 
     img_boxes = get_image_boxes(bounding_boxes, img_array, width, height, size=24)
     img_boxes = torch.FloatTensor(img_boxes).to("cuda:0")
-    output = rnet(img_boxes)
-    offsets = output[0].cpu().data.numpy()  # shape [n_boxes, 4]
-    probs = output[1].cpu().data.numpy()  # shape [n_boxes, 2]
+    with torch.no_grad():
+        output = rnet(img_boxes)
+    offsets = output[0].cpu().numpy()  # shape [n_boxes, 4]
+    probs = output[1].cpu().numpy()  # shape [n_boxes, 2]
 
     keep = np.where(probs[:, 1] > thresholds[1])[0]
     bounding_boxes = bounding_boxes[keep]
@@ -88,6 +90,7 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8], nms_thre
     offsets = offsets[keep]
 
     keep = nms(bounding_boxes, nms_thresholds[1])
+    # import ipdb; ipdb.set_trace()
     bounding_boxes = bounding_boxes[keep]
     bounding_boxes = calibrate_box(bounding_boxes, offsets[keep])
     bounding_boxes = convert_to_square(bounding_boxes)
@@ -99,10 +102,11 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8], nms_thre
     if len(img_boxes) == 0:
         return [], []
     img_boxes = torch.FloatTensor(img_boxes).to("cuda:0")
-    output = onet(img_boxes)
-    landmarks = output[0].cpu().data.numpy()  # shape [n_boxes, 10]
-    offsets = output[1].cpu().data.numpy()  # shape [n_boxes, 4]
-    probs = output[2].cpu().data.numpy()  # shape [n_boxes, 2]
+    with torch.no_grad():
+        output = onet(img_boxes)
+    landmarks = output[0].cpu().numpy()  # shape [n_boxes, 10]
+    offsets = output[1].cpu().numpy()  # shape [n_boxes, 4]
+    probs = output[2].cpu().numpy()  # shape [n_boxes, 2]
 
     keep = np.where(probs[:, 1] > thresholds[2])[0]
     bounding_boxes = bounding_boxes[keep]
@@ -119,6 +123,7 @@ def detect_faces(image, min_face_size=20.0, thresholds=[0.6, 0.7, 0.8], nms_thre
 
     bounding_boxes = calibrate_box(bounding_boxes, offsets)
     keep = nms(bounding_boxes, nms_thresholds[2], mode='min')
+    # import ipdb; ipdb.set_trace()
     bounding_boxes = bounding_boxes[keep]
     landmarks = landmarks[keep]
 
