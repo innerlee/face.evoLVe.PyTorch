@@ -28,7 +28,7 @@ def extract_feature_IR50A(img, landmarks):
     if BACKBONE_IR50A is None:
         model_path = os.path.join(os.path.dirname(__file__), '../models/backbone_ir50_asia.pth')
         assert (os.path.exists(model_path))
-        print("Loading Backbone Checkpoint '{}'".format(model_path))
+        # print("Loading Backbone Checkpoint '{}'".format(model_path))
         BACKBONE_IR50A = IR_50([112, 112])
         BACKBONE_IR50A.load_state_dict(torch.load(model_path))
         BACKBONE_IR50A.to("cuda:0")
