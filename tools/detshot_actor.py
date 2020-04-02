@@ -31,6 +31,7 @@ for t, f in enumerate(files):
     if len(bounding_boxes) > 1:
         n = np.argmax(bounding_boxes[:, -1])
         bounding_boxes = bounding_boxes[n:n+1, :]
+        landmarks = landmarks[n:n+1, :]
     if len(bounding_boxes) > 0:
         features = extract_feature_IR50A(img, landmarks)
     else:
