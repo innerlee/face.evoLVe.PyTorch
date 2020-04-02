@@ -28,6 +28,9 @@ result = []
 for t, f in enumerate(files):
     img = Image.open(f).convert('RGB')
     bounding_boxes, landmarks = detect_faces(img)
+    if len(bounding_boxes) > 1:
+        n = np.argmax(bounding_boxes[:, -1])
+        bounding_boxes = bounding_boxes[n:n+1, :]
     if len(bounding_boxes) > 0:
         features = extract_feature_IR50A(img, landmarks)
     else:
